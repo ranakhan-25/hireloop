@@ -5,6 +5,49 @@ const jobRouter = require("express").Router();
 const jobCollection = db.collection("jobs");
 const companyCollection = db.collection("company");
 
+jobRouter.get("/api/jobs/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await jobCollection.findOne({_id:id});
+    if (!result) {
+      return res.json({
+        status: 500,
+        message: "job is not found",
+      });
+    }
+    res.json({
+      status: 200,
+      message: "jobs found successfully",
+      payload: result,
+    });
+  } catch (error) {
+    res.json({
+      status: 500,
+      message: error.message,
+    });
+  }
+});
+jobRouter.get("/api/jobs", async (req, res) => {
+  try {
+    const result = await jobCollection.find().toArray();
+    if (!result) {
+      return res.json({
+        status: 500,
+        message: "job is not found",
+      });
+    }
+    res.json({
+      status: 200,
+      message: "jobs found successfully",
+      payload: result,
+    });
+  } catch (error) {
+    res.json({
+      status: 500,
+      message: error.message,
+    });
+  }
+});
 jobRouter.get("/api/jobs", async (req, res) => {
   try {
     const query = {};
