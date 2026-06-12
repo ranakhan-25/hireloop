@@ -15,7 +15,6 @@ async function run() {
     
     app.use(jobRouter)
 
-
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!",

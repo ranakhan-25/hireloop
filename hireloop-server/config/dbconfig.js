@@ -10,8 +10,10 @@ const client = new MongoClient(uri, {
 });
 
 const db = client.db("hireLoop-jobs");
+const db_hireLoop = client.db("hireLoop");
 
 module.exports = {
   client,
   db,
+  db_hireLoop
 };

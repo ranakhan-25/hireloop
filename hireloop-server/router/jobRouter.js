@@ -1,53 +1,161 @@
 const { ObjectId } = require("mongodb");
-const { db } = require("../config/dbConfig");
+const { db, db_hireLoop } = require("../config/dbConfig");
 const jobRouter = require("express").Router();
 
 const jobCollection = db.collection("jobs");
 const companyCollection = db.collection("company");
+const userCollection = db_hireLoop.collection("user");
+const applicationCollection = db_hireLoop.collection("application");
+const plansCollection = db_hireLoop.collection("plans");
+const subscriptionCollection = db_hireLoop.collection("subscription");
 
-jobRouter.get("/api/jobs/:id", async (req, res) => {
+
+
+jobRouter.get("/api/plans", async (req, res) => {
   try {
-    const { id } = req.params;
-    const result = await jobCollection.findOne({_id:id});
-    if (!result) {
-      return res.json({
-        status: 500,
-        message: "job is not found",
-      });
+
+    const query = {};
+    if (req.query.planId) {
+      query.id = req.query.planId;
     }
-    res.json({
-      status: 200,
-      message: "jobs found successfully",
+    const result = await plansCollection.findOne(query);
+
+    if (!result) {
+      return res.status(500).json({
+      success: false,
+      message: "plans is not successfully",
+    });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "plans are not successfully",
       payload: result,
     });
   } catch (error) {
-    res.json({
-      status: 500,
+    return res.status(500).json({
+      success: false,
       message: error.message,
     });
   }
 });
-jobRouter.get("/api/jobs", async (req, res) => {
+jobRouter.post("/api/subscription", async (req, res) => {
   try {
-    const result = await jobCollection.find().toArray();
-    if (!result) {
-      return res.json({
-        status: 500,
-        message: "job is not found",
-      });
+    const data = req.body;
+    const result = await subscriptionCollection.insertOne(data);
+
+
+    const filter = { email: data.email };
+    const updateDocument = {
+      $set: {
+        email : data.email,
+        plan:data.planId
+      }
     }
-    res.json({
-      status: 200,
-      message: "jobs found successfully",
-      payload: result,
+
+    const updateResult = await userCollection.updateOne(filter, updateDocument);
+
+    console.log(updateResult)
+
+    if (!updateResult) {
+      return res.status(500).json({
+      success: false,
+      message: "update is not successfully",
+    });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "update are not successfully",
+      payload: updateResult,
     });
   } catch (error) {
-    res.json({
-      status: 500,
+    return res.status(500).json({
+      success: false,
       message: error.message,
     });
   }
 });
+jobRouter.post("/api/application", async (req, res) => {
+  try {
+    const apply = req.body;
+    const result = await applicationCollection.insertOne(apply);
+
+    if (!result) {
+      return res.status(500).json({
+      success: false,
+      message: "apply is not successfully",
+    });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "apply are not successfully",
+      payload: result,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+jobRouter.get("/api/application", async (req, res) => {
+  try {
+    const query = {}
+    if (req.query.applicantId) {
+      query.applicantId = req.query.applicantId
+    }
+    if (req.query.jobId) {
+      query.jobIdId = req.query.jobId
+    }
+
+    const cursor = applicationCollection.find(query);
+    const result = await cursor.toArray();
+
+    if (result.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "application not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "application found successfully",
+      payload: result,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+jobRouter.get("/api/users", async (req, res) => {
+  try {
+    const cursor = userCollection.find();
+    const result = await cursor.toArray();
+
+    if (result.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Users not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Users found successfully",
+      payload: result,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
 jobRouter.get("/api/jobs", async (req, res) => {
   try {
     const query = {};
@@ -62,7 +170,29 @@ jobRouter.get("/api/jobs", async (req, res) => {
     }
 
     const result = await jobCollection.find(query).toArray();
-    console.log(result);
+    
+    if (!result) {
+      return res.json({
+        status: 500,
+        message: "job is not found",
+      });
+    }
+    res.json({
+      status: 200,
+      message: "jobs found successfully",
+      payload: result,
+    });
+  } catch (error) {
+    res.json({
+      status: 500,
+      message: error.message,
+    });
+  }
+});
+jobRouter.get("/api/jobs/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await jobCollection.findOne({_id:id});
     if (!result) {
       return res.json({
         status: 500,
