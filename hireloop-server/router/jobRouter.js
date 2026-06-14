@@ -211,6 +211,7 @@ jobRouter.get("/api/jobs/:id", async (req, res) => {
     });
   }
 });
+
 jobRouter.get("/api/company", async (req, res) => {
   try {
     const query = {};
@@ -219,32 +220,6 @@ jobRouter.get("/api/company", async (req, res) => {
     }
 
     const result = await companyCollection.find(query).toArray();
-    if (!result) {
-      return res.json({
-        status: 500,
-        message: "company is not found",
-      });
-    }
-    res.json({
-      status: 200,
-      message: "company found successfully",
-      payload: result,
-    });
-  } catch (error) {
-    res.json({
-      status: 500,
-      message: error.message,
-    });
-  }
-});
-jobRouter.get("/api/company", async (req, res) => {
-  try {
-    const query = {};
-    if (req.query.companyId) {
-      query.recruiterId = req.query.companyId;
-    }
-
-    const result = await companyCollection.findOne(query);
     if (!result) {
       return res.json({
         status: 500,
@@ -276,6 +251,31 @@ jobRouter.post("/api/jobs", async (req, res) => {
     res.json({
       status: 200,
       message: "job created successfully",
+      payload: result,
+    });
+  } catch (error) {
+    res.json({
+      status: 500,
+      message: error.message,
+    });
+  }
+});
+jobRouter.patch("/api/company/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await companyCollection.findOneAndUpdate({ _id: new ObjectId(id) }, {
+      $set: {
+      status:req.body.status
+    }});
+    if (!result) {
+      return res.json({
+        status: 500,
+        message: "Company status updated not successfully",
+      });
+    }
+    res.json({
+      status: 200,
+      message: "Company status updated successfully",
       payload: result,
     });
   } catch (error) {
